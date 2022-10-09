@@ -4,7 +4,7 @@
  *
  * @author Levent Emre PAÇAL
  * @web https://leventemre.com
- * @update 20 Sep 2022
+ * @update 09 Oct 2022
 */
 
 namespace wpcomment;
@@ -19,17 +19,37 @@ class bot {
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
         $cikti = curl_exec($ch);
-        return $cikti;
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        return array("response" => $cikti, "http_status" => $http_status);
+    }
+
+    private static function findWpCommentsPost($url) {
+        $ex_url = explode("/", $url);
+        $mainTest = self::basic_cURL("https://".parse_url($url)["host"]."/wp-comments-post.php");
+        $firstDirectoryTest = self::basic_cURL("https://".$ex_url[2]."/".$ex_url[3]);
+        
+        if($mainTest["http_status"]==405) {
+            return "https://".parse_url($url)["host"]."/wp-comments-post.php";
+        } elseif($firstDirectoryTest["http_status"]==405) {
+            return "https://".$ex_url[2]."/".$ex_url[3];
+        }
+        return false;
     }
 
     public static function sendComment($postaddress, $variables = array()) {
     $gir = self::basic_cURL($postaddress);
-    preg_match_all("@<input type='hidden' name='comment_post_ID' value='(.*?)'@si", $gir, $post_id);
+    preg_match_all("@<input type='hidden' name='comment_post_ID' value='(.*?)'@si", $gir["response"], $post_id);
     $post_id = $post_id[1][0];
-    $postaddress_curl = "https://".parse_url($postaddress)["host"]."/wp-comments-post.php";
+    $postaddress_curl = self::findWpCommentsPost($postaddress);
 
+        if($postaddress_curl==false) {
+        return [
+            "status" => 0,
+            "comment_address" => htmlspecialchars($postaddress),
+            "message" => parse_url($postaddress)["host"]." could not find wp-comments-post.php of address"
+        ];   
+        } else {
         if(empty(trim($post_id))) {
         return [
             "status" => 0,
@@ -81,6 +101,7 @@ class bot {
         }
 
         }
+    }
     }
     }
 
