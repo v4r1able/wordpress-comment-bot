@@ -87,6 +87,7 @@ var yorumbot_post = {
 $.post("multiplePost.php", yorumbot_post, function(yorumcikti) {
 if(yorumcikti.status==1) {
     var divclass = "alert alert-success";
+    $.post("saveComment.php", {"comment_address":yorumcikti.comment_address}, function(f) {});
 } else if(yorumcikti.status==0) {
     var divclass = "alert alert-danger";
 }
