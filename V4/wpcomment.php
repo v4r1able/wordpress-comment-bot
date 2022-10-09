@@ -27,7 +27,7 @@ class bot {
     private static function findWpCommentsPost($url) {
         $ex_url = explode("/", $url);
         $mainTest = self::basic_cURL("https://".parse_url($url)["host"]."/wp-comments-post.php");
-        $firstDirectoryTest = self::basic_cURL("https://".$ex_url[2]."/".$ex_url[3]);
+        $firstDirectoryTest = self::basic_cURL("https://".$ex_url[2]."/".$ex_url[3]."/wp-comments-post.php");
         
         if($mainTest["http_status"]==405) {
             return "https://".parse_url($url)["host"]."/wp-comments-post.php";
